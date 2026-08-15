@@ -1,10 +1,11 @@
 import Dexie, { type Table } from 'dexie';
-import type { Transaction, Category, RecurringRule } from './types';
+import type { Transaction, Category, RecurringRule, PendingImport } from './types';
 
 export class MoneyManagerDB extends Dexie {
   transactions!: Table<Transaction, number>;
   categories!: Table<Category, number>;
   recurringRules!: Table<RecurringRule, number>;
+  pendingImports!: Table<PendingImport, number>;
 
   constructor() {
     super('MoneyManagerDB');
@@ -18,6 +19,13 @@ export class MoneyManagerDB extends Dexie {
       transactions: '++id, date, monthKey, categoryId, source, type',
       categories: '++id, name',
       recurringRules: '++id, nextDueDate',
+    });
+    // v3: add pendingImports table (SMS quick-add queue, reviewed/confirmed manually)
+    this.version(3).stores({
+      transactions: '++id, date, monthKey, categoryId, source, type',
+      categories: '++id, name',
+      recurringRules: '++id, nextDueDate',
+      pendingImports: '++id, capturedAt',
     });
   }
 }

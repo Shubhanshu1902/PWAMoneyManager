@@ -33,7 +33,9 @@ export function useTransactions(filters: TransactionFilters = {}): Transaction[]
   );
 }
 
-export async function addTransaction(input: Omit<Transaction, 'id' | 'monthKey' | 'createdAt'>) {
+export type TransactionInput = Omit<Transaction, 'id' | 'monthKey' | 'createdAt'>;
+
+export async function addTransaction(input: TransactionInput) {
   await db.transactions.add({
     ...input,
     monthKey: monthKeyOf(input.date),

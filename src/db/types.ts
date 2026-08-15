@@ -24,6 +24,15 @@ export interface Transaction {
   createdAt: number;
 }
 
+export interface PendingImport {
+  id?: number;
+  amount: number;
+  source?: Source; // undefined when the keyword didn't match a known account
+  keyword?: string;
+  note?: string;
+  capturedAt: number;
+}
+
 export interface RecurringRule {
   id?: number;
   type: TransactionType;
