@@ -21,6 +21,10 @@ function extractAmount(raw: string): number | null {
   return amount > 0 ? amount : null;
 }
 
+export function sourceForKeyword(keyword?: string): Source | undefined {
+  return keyword ? KEYWORD_SOURCE[keyword.toLowerCase()] : undefined;
+}
+
 export function hasQuickAddQuery(search: string): boolean {
   return new URLSearchParams(search).has('qaAmount');
 }
@@ -34,7 +38,7 @@ export function parseQuickAdd(search: string): QuickAddPayload | null {
   if (!amount) return null;
 
   const keyword = params.get('qaKeyword')?.toLowerCase() || undefined;
-  const source = keyword ? KEYWORD_SOURCE[keyword] : undefined;
+  const source = sourceForKeyword(keyword);
   const note = params.get('qaNote') || undefined;
 
   return { amount, source, keyword, note };

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { GistSyncSettings } from '../components/pending/GistSyncSettings';
 import { PendingListItem } from '../components/pending/PendingListItem';
 import { TransactionForm } from '../components/transactions/TransactionForm';
 import type { PendingImport, Transaction } from '../db/types';
@@ -6,6 +7,7 @@ import { SOURCES } from '../db/types';
 import { useCategories } from '../hooks/useCategories';
 import { confirmPendingImport, discardPendingImport, usePendingImports } from '../hooks/usePendingImports';
 import { todayISODate } from '../utils/date';
+import { getGistConfig, syncPendingFromGist } from '../utils/gistSync';
 
 function toFormInitial(item: PendingImport): Transaction {
   return {
@@ -24,15 +26,44 @@ export function PendingScreen() {
   const categories = useCategories();
   const items = usePendingImports();
   const [reviewing, setReviewing] = useState<PendingImport | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+
+  async function handleSync() {
+    if (!getGistConfig()) {
+      setSettingsOpen(true);
+      return;
+    }
+    setSyncing(true);
+    setSyncMessage(null);
+    const result = await syncPendingFromGist();
+    setSyncing(false);
+    setSyncMessage(
+      result.error ? result.error : result.imported > 0 ? `Synced ${result.imported} new entr${result.imported === 1 ? 'y' : 'ies'}` : 'Nothing new'
+    );
+    setTimeout(() => setSyncMessage(null), 3000);
+  }
 
   return (
     <div className="screen">
-      <h1>Pending</h1>
+      <div className="screen-header">
+        <h1>Pending</h1>
+        <div className="form-actions">
+          <button type="button" className="primary small" onClick={handleSync} disabled={syncing}>
+            {syncing ? 'Syncing…' : 'Sync'}
+          </button>
+          <button type="button" className="primary small" onClick={() => setSettingsOpen(true)}>
+            ⚙
+          </button>
+        </div>
+      </div>
+      {syncMessage && <p className="saved-message">{syncMessage}</p>}
 
       {items.length === 0 ? (
         <p className="empty-state">
-          Nothing pending. Quick-added SMS entries (via the Shortcuts automation) will show up here for
-          review.
+          Nothing pending. Tap Sync to pull in anything the Shortcuts automation captured, or set up sync
+          via the ⚙ button if you haven't yet.
         </p>
       ) : (
         <div className="transaction-list">
@@ -61,6 +92,15 @@ export function PendingScreen() {
                 }
               }}
             />
+          </div>
+        </div>
+      )}
+
+      {settingsOpen && (
+        <div className="modal-overlay" onClick={() => setSettingsOpen(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Gist sync settings</h2>
+            <GistSyncSettings onClose={() => setSettingsOpen(false)} />
           </div>
         </div>
       )}

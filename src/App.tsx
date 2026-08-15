@@ -11,6 +11,7 @@ import { CategoriesScreen } from './screens/CategoriesScreen';
 import { usePendingImports } from './hooks/usePendingImports';
 import { captureQuickAddFromUrl, type QuickAddCaptureResult } from './db/quickAddCapture';
 import { formatCurrency } from './utils/currency';
+import { syncPendingFromGist } from './utils/gistSync';
 
 function App() {
   const [tab, setTab] = useState<TabKey>('add');
@@ -19,6 +20,7 @@ function App() {
 
   useEffect(() => {
     captureQuickAddFromUrl().then(setCapture);
+    syncPendingFromGist();
   }, []);
 
   if (capture.status === 'success' || capture.status === 'error') {
