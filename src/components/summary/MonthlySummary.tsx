@@ -1,6 +1,7 @@
 import type { Category, Transaction } from '../../db/types';
 import { SOURCES } from '../../db/types';
 import { formatCurrency } from '../../utils/currency';
+import { buildCategoryColorMap } from '../../utils/chartColors';
 import { CategoryPieChart } from './CategoryPieChart';
 
 interface Props {
@@ -24,6 +25,8 @@ export function MonthlySummary({ transactions, categories }: Props) {
   const categoryRows = [...expenseByCategory.entries()]
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value);
+  const categoryColors = buildCategoryColorMap(categoryRows);
+  const categoryTotal = categoryRows.reduce((sum, r) => sum + r.value, 0);
 
   const bySource = SOURCES.map((source) => ({
     source,
@@ -63,8 +66,17 @@ export function MonthlySummary({ transactions, categories }: Props) {
           <tbody>
             {categoryRows.map((row) => (
               <tr key={row.name}>
-                <td>{row.name}</td>
+                <td>
+                  <span
+                    className="category-dot"
+                    style={{ backgroundColor: categoryColors.get(row.name) }}
+                  />
+                  {row.name}
+                </td>
                 <td>{formatCurrency(row.value)}</td>
+                <td className="breakdown-table-pct">
+                  {categoryTotal > 0 ? `${Math.round((row.value / categoryTotal) * 100)}%` : ''}
+                </td>
               </tr>
             ))}
           </tbody>

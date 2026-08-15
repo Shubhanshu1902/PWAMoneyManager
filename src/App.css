@@ -365,6 +365,20 @@ button.danger {
   border-top: 1px solid var(--border);
 }
 
+.breakdown-table-pct {
+  text-align: right;
+  opacity: 0.6;
+  white-space: nowrap;
+}
+
+.category-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
 /* Categories */
 .category-add-form {
   display: flex;
