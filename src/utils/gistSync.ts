@@ -59,12 +59,40 @@ export async function syncPendingFromGist(): Promise<SyncResult> {
 
   const data = await res.json();
   const files: Record<string, { content: string }> = data.files ?? {};
+
+  let imported = 0;
+  const filesToClear: Record<string, string | null> = {};
+
+  // Primary format: one shared "queue.ndjson" file, one JSON object per line,
+  // appended to by the Shortcuts automation. Avoids Shortcuts needing to
+  // generate a unique filename per capture.
+  const ndjson = files['queue.ndjson']?.content?.trim();
+  if (ndjson) {
+    for (const line of ndjson.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      try {
+        const entry: GistEntry = JSON.parse(trimmed);
+        if (!entry.amount || entry.amount <= 0) continue;
+        await addPendingImport({
+          amount: entry.amount,
+          source: sourceForKeyword(entry.keyword),
+          keyword: entry.keyword,
+          note: entry.note,
+        });
+        imported++;
+      } catch {
+        // malformed line — dropped, doesn't jam the rest of the queue
+      }
+    }
+    filesToClear['queue.ndjson'] = 'placeholder';
+  }
+
+  // Legacy format: one entry-<id>.json file per capture. Still supported in
+  // case per-message files are used instead of the shared NDJSON file.
   const entryNames = Object.keys(files).filter(
     (name) => name.startsWith('entry-') && name.endsWith('.json')
   );
-  if (entryNames.length === 0) return { imported: 0 };
-
-  let imported = 0;
   for (const name of entryNames) {
     try {
       const entry: GistEntry = JSON.parse(files[name].content);
@@ -79,7 +107,10 @@ export async function syncPendingFromGist(): Promise<SyncResult> {
     } catch {
       // malformed entry — still gets deleted below so it doesn't jam the queue
     }
+    filesToClear[name] = null;
   }
+
+  if (imported === 0) return { imported: 0 };
 
   // Best-effort cleanup. If this fails (offline mid-sync, etc.) the same
   // entries get re-imported next sync — an occasional harmless duplicate
@@ -89,7 +120,12 @@ export async function syncPendingFromGist(): Promise<SyncResult> {
       method: 'PATCH',
       headers: { ...headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        files: Object.fromEntries(entryNames.map((name) => [name, null])),
+        files: Object.fromEntries(
+          Object.entries(filesToClear).map(([name, content]) => [
+            name,
+            content === null ? null : { content },
+          ])
+        ),
       }),
     });
   } catch {
