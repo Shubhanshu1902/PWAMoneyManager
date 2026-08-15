@@ -435,6 +435,46 @@ button.danger {
   font-size: 13px;
 }
 
+/* Quick-add capture banner */
+.quickadd-banner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+}
+
+.quickadd-banner-icon {
+  font-size: 48px;
+  color: var(--income);
+  margin-bottom: 8px;
+}
+
+.quickadd-banner-icon.error {
+  color: var(--danger);
+}
+
+.quickadd-banner h1 {
+  margin: 0;
+}
+
+.quickadd-banner-note {
+  opacity: 0.6;
+  font-size: 13px;
+  white-space: pre-wrap;
+  max-width: 320px;
+}
+
+.quickadd-banner button {
+  margin-top: 16px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  border: 1px solid var(--accent);
+}
+
 /* Import */
 .import-panel {
   display: flex;

@@ -21,6 +21,10 @@ function extractAmount(raw: string): number | null {
   return amount > 0 ? amount : null;
 }
 
+export function hasQuickAddQuery(search: string): boolean {
+  return new URLSearchParams(search).has('qaAmount');
+}
+
 export function parseQuickAdd(search: string): QuickAddPayload | null {
   const params = new URLSearchParams(search);
   const amountRaw = params.get('qaAmount');
